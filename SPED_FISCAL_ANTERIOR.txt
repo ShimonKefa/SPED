@@ -1,0 +1,21 @@
+[TXT]
+SubPasta = sim
+Caminho = SPED\SPED_FISCAL\
+PontoDecimal = ,
+SeparadorMilhar = 
+SeparadorCampos = |
+LarguraFixa = NAO
+
+[SQL]
+1= EOF
+
+[ChildNodes]
+1 = BLOCO_0
+--2 = BLOCO_A
+3 = BLOCO_C
+4 = BLOCO_D
+5 = BLOCO_E
+6 = BLOCO_G
+7 = BLOCO_H
+8 = BLOCOS_1
+9 = BLOCOS_9

@@ -1,0 +1,24 @@
+[TXT]
+RegPai = BLOCO_K
+Reg = K010
+Display = K010 - TIPO DE LEIAUTE
+SubPasta = sim
+Caminho = SPED\SPED_FISCAL\BLOCO_K\MOV\
+
+[ERRO]
+Validar=
+
+[SPEED]
+
+
+[SQL]
+1 = SELECT 'K010' REG, '2' IND_TP_LEIAUTE FROM RDB$DATABASE WHERE :PARAM_7 = 'S'
+
+[DISPLAYFORMAT]
+
+[FIELDSLENGTH]
+
+[ChildNodes]
+
+[ROTULO]
+

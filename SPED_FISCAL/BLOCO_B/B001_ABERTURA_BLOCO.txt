@@ -1,0 +1,32 @@
+[TXT]
+RegPai = BLOCO_B
+Reg = B001
+Display = B001 - ABERTURA BLOCO B
+SubPasta = sim
+Caminho = SPED\SPED_FISCAL\BLOCO_B\MOV\
+SHOWSQL = NAO
+
+[ERRO]
+Validar=
+
+[SPEED]
+
+
+[SQL]
+1=SELECT 'B001' REG,  '1' QUANT FROM RDB$DATABASE WHERE :Data_Inicial >= '01/01/2019'
+
+[DISPLAYFORMAT]
+
+
+
+[FIELDSLENGTH]
+COD_ESTAB = 0
+RAIZ_CNPJ = 0
+IND_ESCRI= 0
+APU_CRED = 0
+COD_INC_TRIB = 0
+
+[ChildNodes]
+
+[ROTULO]
+

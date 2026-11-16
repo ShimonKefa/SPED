@@ -1,0 +1,17 @@
+[TXT]
+SubPasta = sim
+Caminho = SPED\SPED_CONTABIL\
+PontoDecimal = ,
+SeparadorMilhar = 
+SeparadorCampos = |
+LarguraFixa = NAO
+
+[SQL]
+1= EOF
+
+[ChildNodes]
+1 = CONTAS_DRE
+2 = BLOCO_0
+3 = BLOCO_I
+4 = BLOCO_J
+5 = BLOCOS_9

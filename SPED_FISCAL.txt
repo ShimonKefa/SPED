@@ -1,0 +1,36 @@
+[TXT]
+SubPasta = sim
+Caminho = SPED\SPED_FISCAL\
+PontoDecimal = ,
+SeparadorMilhar = 
+SeparadorCampos = |
+LarguraFixa = NAO
+
+[SQL]
+1= EOF
+
+[ChildNodes]
+1 = AJUSTES
+2 = VL_ITEM
+3 = DOCS
+4 = DOCREF
+5 = DOCITS
+6 = MOV_CRT
+7 = OBS
+8 = INVENT
+9 = CIAP
+10 = EXPORT
+11 = IND_EXPORT
+12 = APU
+13 = AJUSTEAPU
+14 = PROCESSOS
+15 = BLOCO_0
+16 = BLOCO_B
+17 = BLOCO_C
+18 = BLOCO_D
+19 = BLOCO_E
+20 = BLOCO_G
+21 = BLOCO_H
+22 = BLOCO_K
+23 = BLOCOS_1
+24 = BLOCOS_9

@@ -1,0 +1,1056 @@
+﻿----------------------------------------------------------------------------------------------------------------------------------------------------------
+[RELATORIOS]
+1= CUBO FISCAL
+
+
+[CUBO FISCAL]
+NOME = CUBO FISCAL
+MODELO = R
+MODULO = GERAL
+GRUPO = 
+IMPRESSORA = 
+CONTEUDO = TXT_CUBO_FISCAL
+SLICE_1 = EFD ICMS_IPI - REL.ENTRADAS
+SLICE_2 = EFD ICMS_IPI - REL.SAIDAS
+SLICE_3 = EFD CONTRIBUICOES - REGIME CUMULATIVO
+SLICE_4 = EFD CONTRIBUICOES - REGIME NAO CUMULATIVO
+SLICE_5 = EFD CONTRIBUICOES - GRUPO P (DESONERACAO)
+
+[TXT_CUBO_FISCAL_INI]
+[TITULO]
+Nome = 
+linha1 = Perido: de :Data_Inicial até :Data_Final
+linha2 = Emitido em: :HOJE
+linha3 = Página: :Pagina / :Paginas
+LogoTipo = NAO
+Rodape =
+[PAGE]
+Orientation =RETRATO
+PAPERHEIGHT = 297
+PAPERWIDTH = 210
+Grade_linha = NAO
+Grade_Coluna = NAO
+LINHA_GRUPO = NAO
+TABELA_DINAMICA = NAO
+TABELA_RESUMO = NAO
+CUBO = SIM
+[FONT]
+Name = Arial Narrow
+Size = 9
+[AUDITORIA]
+Padrao = NAO
+TituloPainel1 =
+ValorPainel1 =
+TituloPainel2 =
+ValorPainel2 =
+[SQL]
+SELECT 
+ESTAB.FANT_ESTB || '(' || COALESCE(ESTAB.CNPJCPF_ESTB, ' ') || ')' EMPRESA,
+VDOC.ESP_DOC || COALESCE(VDOC.NUM_DOC, ' ') NUM_NF,
+PESSOAS.NOM_PESS PESSOA,
+CASE WHEN VDOC.MOV_DOC = 'S' THEN 'SAIDA' ELSE 'ENTRADA' END MOV,
+VDOC.ESP_DOC TIPO_DOC,
+COALESCE(GRPIT_SC.SPEDPISCOFINS_TRIB,'N') SPED_CONTRIB,
+CASE WHEN COALESCE(VDOC.ESC_DOC,'N') IN ('S','I','M') THEN 'S' ELSE 'N' END SPED_FISCAL,
+CASE WHEN VDOC.COD_AIDF > 0 THEN CASE WHEN SUBSTRING(ESTAB.CNPJCPF_ESTB FROM 1 FOR 8) = SUBSTRING(VDOC.CNPJCPF_PESS FROM 1 FOR 8) THEN 'TRANSFERENCIA' ELSE 'EMISSAO PROPRIA' END ELSE 'TERCEIROS' END TIPO_EMISSAO,
+VDOCIT.CFOP_DOCIT||' ' CFOP,
+CFOP.ESTAT_CFOP ESTAT_CFOP,
+VDOC.EMISS_DOC EMISSAO,
+VDOC.ENTSAID_DOC ENTSAIDA,
+CASE WHEN VDOC.COD_AIDF > 0 THEN VDOC.EMISS_DOC ELSE VDOC.ENTSAID_DOC END DATA_REG,
+PROD.COD_ESTAB||'-'||PROD.CODBAR_PROD COD_ITEM,
+CASE WHEN VDOCIT.COD_DOCIT < 900 THEN PROD.NOM_PROD || ' - ' || PROD.CODBAR_PROD ELSE 'FRETES/SEGUROS/OUTRAS DESP.' END PRODUTO,
+VDOCIT.QTDE_DOCIT QTDE, 
+CASE WHEN VDOCIT.COD_DOCIT < 900 THEN VDOCIT.UN_DOCIT ELSE '' END UN, 
+PROD.TIPI_PROD NCM,
+CASE
+WHEN VDOC.FINNFE_DOC = '2' THEN '06 - DOC.FISCAL COMPLEMENTAR'
+WHEN VDOC.TIPO_DOC = 'E' THEN '01 - ESCRITURACAO EXTEMPORANEA DE DOC.REGULAR'
+WHEN VDOC.CANC_DOC = 'S' THEN '02 - DOCUMENTO CANCELADO'
+WHEN VDOC.TIPO_DOC = 'E' AND VDOC.CANC_DOC = 'S' THEN '03 - ESCRITURACAO EXTEMPORANEA DE DOC.REGULAR'
+WHEN VDOC.TIPO_DOC = 'E' AND VDOC.FINNFE_DOC = '2' THEN '01 - ESCRITURACAO EXTEMPORANEA DE DOC.REGULAR'
+WHEN VDOC.STATUS_DOC = 'I' THEN '05 - INUTILIZADO'
+ELSE    '00 - DOCUMENTO REGULAR'
+END COD_SIT,
+VDOCIT.CSTICMSE_DOCIT || ' ' CST_ICMS,
+VDOCIT.CSTIPIE_DOCIT || ' ' CST_IPI,
+CASE WHEN VDOCIT.CFOP_DOCIT = 5929 THEN 0 ELSE VDOCIT.TOTAL_DOCIT  + COALESCE(VDOCIT.ICMSR_DOCIT,0) + COALESCE(VDOCIT.IPI_DOCIT,0) + COALESCE(VDOCIT.FRETE_DOCIT,0) + COALESCE(VDOCIT.SEGURO_DOCIT,0) + COALESCE(VDOCIT.OUTDESP_DOCIT,0)  END TOTAL,
+CASE WHEN VDOCIT.CFOP_DOCIT = 5929 THEN 0 ELSE VDOCIT.BCICMSE_DOCIT END BCICMS,
+CASE WHEN VDOCIT.CFOP_DOCIT = 5929 THEN 0 ELSE CAST(COALESCE(VDOCIT.ALIQICMS_DOCIT,0) AS NUMERIC(10,2)) END ALIQ_ICMS,
+CASE WHEN VDOCIT.CFOP_DOCIT = 5929 THEN 0 ELSE VDOCIT.ICMSE_DOCIT END ICMS,
+CASE WHEN VDOCIT.CFOP_DOCIT = 5929 THEN 0 ELSE VDOCIT.BCIPIE_DOCIT END BCIPI,
+CASE WHEN VDOCIT.CFOP_DOCIT = 5929 THEN 0 ELSE VDOCIT.ALIQIPI_DOCIT END ALIQ_IPI,
+CASE WHEN VDOCIT.CFOP_DOCIT = 5929 THEN 0 ELSE VDOCIT.IPIE_DOCIT END IPI,
+CASE WHEN VDOCIT.CFOP_DOCIT = 5929 THEN 0 ELSE VDOCIT.IPI_DOCIT END IPI_DOC, 
+CASE WHEN VDOCIT.CFOP_DOCIT = 5929 THEN 0 ELSE VDOCIT.ISENTO_DOCIT END ISENTO_ICMS,
+CASE WHEN VDOCIT.CFOP_DOCIT = 5929 THEN 0 ELSE VDOCIT.OUTROS_DOCIT END OUTROS_ICMS,
+CASE WHEN VDOCIT.CFOP_DOCIT = 5929 THEN 0 ELSE VDOCIT.ISEIPI_DOCIT END ISENTO_IPI,
+CASE WHEN VDOCIT.CFOP_DOCIT = 5929 THEN 0 ELSE VDOCIT.OUTIPI_DOCIT END OUTROS_IPI,
+CASE WHEN VDOCIT.CFOP_DOCIT = 5929 THEN 0 ELSE VDOCIT.DALIQICMS_DOCIT END DIFALIQ,
+CASE WHEN VDOCIT.CFOP_DOCIT = 5929 THEN 0 ELSE VDOCIT.ICMSRE_DOCIT END ICMSR,
+CASE WHEN VDOCIT.CFOP_DOCIT = 5929 THEN 0 ELSE (VDOCIT.TOTAL_DOCIT+COALESCE(VDOCIT.ICMSR_DOCIT,0)+COALESCE(VDOCIT.SEGURO_DOCIT,0)+COALESCE(VDOCIT.OUTDESP_DOCIT,0)+COALESCE(VDOCIT.FRETE_DOCIT,0)) END BC_INSS,
+ CASE WHEN VDOCIT.CFOP_DOCIT = 5929 THEN 0 ELSE COALESCE(NCMIT.ALIQ_INSS,0) END ALIQ_INSS,
+CASE WHEN VDOCIT.CFOP_DOCIT = 5929 THEN 0 ELSE (VDOCIT.TOTAL_DOCIT+COALESCE(VDOCIT.ICMSR_DOCIT,0)+COALESCE(VDOCIT.SEGURO_DOCIT,0)+COALESCE(VDOCIT.OUTDESP_DOCIT,0)+COALESCE(VDOCIT.FRETE_DOCIT,0)) * COALESCE(NCMIT.ALIQ_INSS,0) / 100 END INSS,
+GRPIT_SC.CST_PIS CST_PIS,
+GRPIT_SC.CST_COFINS CST_COFINS,
+COALESCE(GRPIT_SC.BC_PIS,'S') CALC_BC_PIS,
+COALESCE(GRPIT_SC.BC_COFINS,'S') CALC_BC_COFINS,
+CASE WHEN COALESCE(GRPIT_SC.CST_PIS,0) IN (4,5,7,8,9) THEN COALESCE(GRPIT_SC.NATREC_TRIB,'???') ELSE '' END NATUREZA_RECEITA_SPED,
+GRP_SC.NOM_GRP GRUPO_SPED_CONTRIB,
+CASE WHEN VDOCIT.CFOP_DOCIT = 5929 THEN 0 ELSE VDOCIT.TOTAL_DOCIT  + COALESCE(VDOCIT.ICMSR_DOCIT,0) + COALESCE(VDOCIT.FRETE_DOCIT,0) + COALESCE(VDOCIT.SEGURO_DOCIT,0) + COALESCE(VDOCIT.OUTDESP_DOCIT,0)  END VL_ITEM_SPED_CONTRIB,
+CASE WHEN (COALESCE(GRPIT_SC.BC_PIS,'S') = 'N') THEN
+ 0
+ELSE
+  CASE WHEN ESTAB.ATIV1_ESTB = 0 THEN
+   (VDOCIT.TOTAL_DOCIT + COALESCE(VDOCIT.FRETE_DOCIT,0) + COALESCE(VDOCIT.OUTDESP_DOCIT,0) + COALESCE(VDOCIT.SEGURO_DOCIT,0) + COALESCE(VDOCIT.ICMSR_DOCIT,0)) - (COALESCE(VDOCIT.TOTALDV_DOCIT,0)) - 
+   ((VDOCIT.TOTAL_DOCIT + COALESCE(VDOCIT.FRETE_DOCIT,0) + COALESCE(VDOCIT.OUTDESP_DOCIT,0) + COALESCE(VDOCIT.SEGURO_DOCIT,0) + COALESCE(VDOCIT.ICMSR_DOCIT,0)) * COALESCE(GRPIT_SC.RDBC_PIS,0) / 100)
+  ELSE
+   (VDOCIT.TOTAL_DOCIT  + COALESCE(VDOCIT.FRETE_DOCIT,0) + COALESCE(VDOCIT.OUTDESP_DOCIT,0) + COALESCE(VDOCIT.SEGURO_DOCIT,0) + COALESCE(VDOCIT.ICMSR_DOCIT,0)) - (COALESCE(VDOCIT.TOTALDV_DOCIT,0)) - 
+   ((VDOCIT.TOTAL_DOCIT+ COALESCE(VDOCIT.FRETE_DOCIT,0) + COALESCE(VDOCIT.OUTDESP_DOCIT,0) + COALESCE(VDOCIT.SEGURO_DOCIT,0) + COALESCE(VDOCIT.ICMSR_DOCIT,0)) * COALESCE(GRPIT_SC.RDBC_PIS,0) / 100) 
+  END
+END VL_BC_PIS,
+COALESCE(GRPIT_SC.ALIQ_PIS, ESTAB.ALIQPIS_ESTB) ALIQ_PIS,
+CASE WHEN (COALESCE(GRPIT_SC.BC_PIS,'S') = 'N') OR (COALESCE(VDOCIT.PEDRESP_DOCIT,'N') = 'DEV') THEN
+ 0
+ELSE
+ CASE WHEN ESTAB.ATIV1_ESTB = 0 THEN
+  ((VDOCIT.TOTAL_DOCIT + COALESCE(VDOCIT.FRETE_DOCIT,0) + COALESCE(VDOCIT.OUTDESP_DOCIT,0) + COALESCE(VDOCIT.SEGURO_DOCIT,0) + COALESCE(VDOCIT.ICMSR_DOCIT,0)) - (COALESCE(VDOCIT.TOTALDV_DOCIT,0)) - 
+  ((VDOCIT.TOTAL_DOCIT + COALESCE(VDOCIT.FRETE_DOCIT,0) + COALESCE(VDOCIT.OUTDESP_DOCIT,0) + COALESCE(VDOCIT.SEGURO_DOCIT,0) + COALESCE(VDOCIT.ICMSR_DOCIT,0)) * COALESCE(GRPIT_SC.RDBC_PIS,0) / 100)) * COALESCE(GRPIT_SC.ALIQ_PIS, ESTAB.ALIQPIS_ESTB) / 100
+ ELSE
+  ((VDOCIT.TOTAL_DOCIT  + COALESCE(VDOCIT.FRETE_DOCIT,0) + COALESCE(VDOCIT.OUTDESP_DOCIT,0) + COALESCE(VDOCIT.SEGURO_DOCIT,0) + COALESCE(VDOCIT.ICMSR_DOCIT,0)) - (COALESCE(VDOCIT.TOTALDV_DOCIT,0)) - 
+  ((VDOCIT.TOTAL_DOCIT  + COALESCE(VDOCIT.FRETE_DOCIT,0) + COALESCE(VDOCIT.OUTDESP_DOCIT,0) + COALESCE(VDOCIT.SEGURO_DOCIT,0) + COALESCE(VDOCIT.ICMSR_DOCIT,0)) * COALESCE(GRPIT_SC.RDBC_PIS,0) / 100)) * COALESCE(GRPIT_SC.ALIQ_PIS, ESTAB.ALIQPIS_ESTB) / 100
+ END
+END VL_PIS,
+CASE WHEN (COALESCE(GRPIT_SC.BC_COFINS,'S') = 'N') THEN
+ 0
+ELSE
+  CASE WHEN ESTAB.ATIV1_ESTB = 0 THEN
+   (VDOCIT.TOTAL_DOCIT + COALESCE(VDOCIT.FRETE_DOCIT,0) + COALESCE(VDOCIT.OUTDESP_DOCIT,0) + COALESCE(VDOCIT.SEGURO_DOCIT,0) + COALESCE(VDOCIT.ICMSR_DOCIT,0)) - (COALESCE(VDOCIT.TOTALDV_DOCIT,0)) - 
+   ((VDOCIT.TOTAL_DOCIT + COALESCE(VDOCIT.FRETE_DOCIT,0) + COALESCE(VDOCIT.OUTDESP_DOCIT,0) + COALESCE(VDOCIT.SEGURO_DOCIT,0) + COALESCE(VDOCIT.ICMSR_DOCIT,0)) * COALESCE(GRPIT_SC.RDBC_COFINS,0) / 100)
+  ELSE
+   (VDOCIT.TOTAL_DOCIT  + COALESCE(VDOCIT.FRETE_DOCIT,0) + COALESCE(VDOCIT.OUTDESP_DOCIT,0) + COALESCE(VDOCIT.SEGURO_DOCIT,0) + COALESCE(VDOCIT.ICMSR_DOCIT,0)) - (COALESCE(VDOCIT.TOTALDV_DOCIT,0)) - 
+   ((VDOCIT.TOTAL_DOCIT+ COALESCE(VDOCIT.FRETE_DOCIT,0) + COALESCE(VDOCIT.OUTDESP_DOCIT,0) + COALESCE(VDOCIT.SEGURO_DOCIT,0) + COALESCE(VDOCIT.ICMSR_DOCIT,0)) * COALESCE(GRPIT_SC.RDBC_COFINS,0) / 100) 
+  END
+END VL_BC_COFINS,
+COALESCE(GRPIT_SC.ALIQ_COFINS, ESTAB.ALIQCOFINS_ESTB) ALIQ_COFINS,
+CASE WHEN (COALESCE(GRPIT_SC.BC_COFINS,'S') = 'N') OR (COALESCE(VDOCIT.PEDRESP_DOCIT,'N') = 'DEV') THEN
+ 0
+ELSE
+ CASE WHEN ESTAB.ATIV1_ESTB = 0 THEN
+  ((VDOCIT.TOTAL_DOCIT + COALESCE(VDOCIT.FRETE_DOCIT,0) + COALESCE(VDOCIT.OUTDESP_DOCIT,0) + COALESCE(VDOCIT.SEGURO_DOCIT,0) + COALESCE(VDOCIT.ICMSR_DOCIT,0)) - (COALESCE(VDOCIT.TOTALDV_DOCIT,0)) - 
+  ((VDOCIT.TOTAL_DOCIT + COALESCE(VDOCIT.FRETE_DOCIT,0) + COALESCE(VDOCIT.OUTDESP_DOCIT,0) + COALESCE(VDOCIT.SEGURO_DOCIT,0) + COALESCE(VDOCIT.ICMSR_DOCIT,0)) * COALESCE(GRPIT_SC.RDBC_COFINS,0) / 100)) * COALESCE(GRPIT_SC.ALIQ_COFINS, ESTAB.ALIQCOFINS_ESTB) / 100
+ ELSE
+  ((VDOCIT.TOTAL_DOCIT  + COALESCE(VDOCIT.FRETE_DOCIT,0) + COALESCE(VDOCIT.OUTDESP_DOCIT,0) + COALESCE(VDOCIT.SEGURO_DOCIT,0) + COALESCE(VDOCIT.ICMSR_DOCIT,0)) - (COALESCE(VDOCIT.TOTALDV_DOCIT,0)) - 
+  ((VDOCIT.TOTAL_DOCIT  + COALESCE(VDOCIT.FRETE_DOCIT,0) + COALESCE(VDOCIT.OUTDESP_DOCIT,0) + COALESCE(VDOCIT.SEGURO_DOCIT,0) + COALESCE(VDOCIT.ICMSR_DOCIT,0)) * COALESCE(GRPIT_SC.RDBC_COFINS,0) / 100)) * COALESCE(GRPIT_SC.ALIQ_COFINS, ESTAB.ALIQCOFINS_ESTB) / 100
+ END
+END VL_COFINS,
+CASE 
+ WHEN ESTAB.TPESCCS_ESTB = 1 THEN '1-CONSOLIDADO'  
+ WHEN ESTAB.TPESCCS_ESTB = 2 THEN '2-INDIVIDUAL'
+ ELSE 
+ '????????????' END TIPO_ESCR_SPED_CONTRIB,
+CASE 
+ WHEN ESTAB.INCTRIB1_ESTB = 1 THEN '1-REGIME NAO-CUMULATIVO'  
+ WHEN ESTAB.INCTRIB1_ESTB = 2 THEN '2-REGIME CUMULATIVO'
+ WHEN ESTAB.INCTRIB1_ESTB = 3 THEN '3-REGIME MISTO'
+ELSE 
+ '????????????' END INC_TRIB_SPED_CONTRIB,  
+CASE 
+ WHEN ESTAB.APUCRED1_ESTB = 0 THEN '0-SEM APROP.CREDITOS'  
+ WHEN ESTAB.APUCRED1_ESTB = 1 THEN '1-APROPRIIACAO DIRETA'
+ WHEN ESTAB.APUCRED1_ESTB = 2 THEN '3-METODO RATEIO PROPORCIONAL'
+ELSE 
+ '????????????' END APU_CREDITOS_SPED_CONTRIB
+ FROM VDOCIT
+INNER JOIN   VDOC ON (VDOC.COD_DOC = VDOCIT.COD_DOC)
+INNER JOIN CFOP ON (CFOP.COD_CFOP = VDOCIT.CFOP_DOCIT AND CFOP.INT_CFOP = VDOCIT.INTCFOP_DOCIT)
+LEFT JOIN ESTAB ON (ESTAB.COD_ESTAB = VDOC.COD_ESTAB)
+LEFT JOIN PROD ON (PROD.COD_ESTQ = VDOCIT.COD_ESTQ)
+LEFT JOIN GRP GRP_SC ON (GRP_SC.COD_GRP = PROD.CODSC_GRP)
+LEFT JOIN GRPIT GRPIT_SC ON (COALESCE(PROD.CODSC_GRP, PROD.COD_GRP) = GRPIT_SC.COD_GRP AND ESTAB.COD_ESTAB = GRPIT_SC.COD_ESTAB AND CFOP.CLCTB_CFOP = GRPIT_SC.CLCTB_CFOP)
+LEFT JOIN NCMIT ON (NCMIT.COD_NCM = PROD.TIPI_PROD AND ESTAB.COD_ESTAB = NCMIT.COD_ESTAB AND CFOP.CLCTB_CFOP = NCMIT.CLCTB_CFOP)
+LEFT JOIN PESSOAS ON (PESSOAS.COD_PESS = VDOC.COD_PESS)
+LEFT JOIN MA ON (MA.COD_MA = PROD.COD_MA)
+WHERE 
+(VDOC.COD_AIDF >=0) AND (VDOC.PRINT_DOC = 'S')
+AND COALESCE(VDOC.CANC_DOC,'N') <> 'S'  AND 
+((VDOC.EMISS_DOC >= :Data_Inicial || ' 00:00:00' AND VDOC.EMISS_DOC <= :Data_Final || ' 23:59:59' AND VDOC.MOV_DOC = 'S') OR (VDOC.ENTSAID_DOC >= :Data_Inicial || ' 00:00:00'  AND VDOC.ENTSAID_DOC <= :Data_Final || ' 23:59:59' AND VDOC.MOV_DOC = 'E'))
+AND VDOCIT.COD_DOCIT < 900 AND
+COALESCE(VDOC.TPAMB_DOC,'0') <> '2'  AND (COALESCE(VDOC.STATUS_DOC,'N') <> 'I')
+[DISPLAYFORMAT]
+QTDE = ,0.00#
+TOTAL = ,0.00;' ';' '
+PRECO = ,0.00;' ';' '
+ICMS = ,0.00;' ';' '
+ISENTO_ICMS = ,0.00;' ';' '
+OUTROS_ICMS = ,0.00;' ';' '
+ISENTO_IPI = ,0.00;' ';' '
+OUTROS_IPI = ,0.00;' ';' '
+DIFALIQ = ,0.00;' ';' '
+BCIPI = ,0.00;' ';' '
+IPI = ,0.00;' ';' '
+CST_IPI = 00
+CST_ICMS = 000
+ICMSR = ,0.00;' ';' '
+ENTSAIDA = dd/mm/yyyy
+EMISSAO = dd/mm/yyyy
+[WIDTH]
+EMPRESA = 10
+NUM_NF = 7
+PESSOA = 30
+EMISSAO = 8
+ENTSAIDA = 8
+MATERIAL = 30
+QTDE = 8
+UN = 3
+PRECO = 8
+TOTAL = 8
+ICMS = 8
+PIS = 8
+COFINS = 8
+[ROTULO]
+EMPRESA = Empresa
+NUM_NF = NF Nº
+PESSOA = Pessoa
+EMISSAO = Emiissão
+ENTSAI
+MATERIAL = Material
+QTDE = Qtde.
+UN = UN
+PRECO = Preço
+TOTAL_PD = Total PD
+TOTAL_NF = Total NF
+TOTAL = Total
+[GROUP_1]
+[TOTAL]
+NOME = TOTAL
+NEGRITO = NAO
+SHOW = NAO
+COMISSAO = SUM
+TOTAL = SUM
+[EXIT]
+[MARGEM]
+BottomMargin=10
+LeftMargin=10
+RightMargin=10
+TopMargin=10
+[TXT_CUBO_FISCAL_FIM]
+
+[EFD ICMS_IPI - REL.ENTRADAS_INI]
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<slice version="2" timestamp="22/05/2014 11:33:09">
+  <Script ScriptLanguage="" Code=""/>
+  <fields>
+    <field name="EMPRESA" caption="EMPRESA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="NUM_NF" caption="NUM_NF" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="PESSOA" caption="PESSOA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="MOV" caption="MOV" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="TIPO_DOC" caption="TIPO_DOC" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="SPED_CONTRIB" caption="SPED_CONTRIB" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="TIPO_EMISSAO" caption="TIPO_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CFOP" caption="CFOP" Width="64" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ESTAT_CFOP" caption="ESTAT_CFOP" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="EMISSAO" caption="EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Year_EMISSAO" caption="Year_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Month_EMISSAO" caption="Month_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Day_EMISSAO" caption="Day_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#DayOfWeeek_EMISSAO" caption="Day_of_week_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ENTSAIDA" caption="ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Year_ENTSAIDA" caption="Year_ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Month_ENTSAIDA" caption="Month_ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Day_ENTSAIDA" caption="Day_ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#DayOfWeeek_ENTSAIDA" caption="Day_of_week_ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="DATA_REG" caption="DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Year_DATA_REG" caption="Year_DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Month_DATA_REG" caption="Month_DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Day_DATA_REG" caption="Day_DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#DayOfWeeek_DATA_REG" caption="Day_of_week_DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="COD_ITEM" caption="COD_ITEM" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="PRODUTO" caption="PRODUTO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="QTDE" caption="QTDE" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="UN" caption="UN" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="NCM" caption="NCM" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="COD_SIT" caption="COD_SIT" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CST_ICMS" caption="CST_ICMS" Width="44" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CST_IPI" caption="CST_IPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="TOTAL" caption="TOTAL" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="BCICMS" caption="BCICMS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_ICMS" caption="ALIQ_ICMS" Width="43" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ICMS" caption="ICMS" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="BCIPI" caption="BCIPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_IPI" caption="ALIQ_IPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="IPI" caption="IPI" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ISENTO_ICMS" caption="ISENTO_ICMS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="OUTROS_ICMS" caption="OUTROS_ICMS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ISENTO_IPI" caption="ISENTO_IPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="OUTROS_IPI" caption="OUTROS_IPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="DIFALIQ" caption="DIFALIQ" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ICMSR" caption="ICMSR" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="BC_INSS" caption="BC_INSS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_INSS" caption="ALIQ_INSS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="INSS" caption="INSS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CST_PIS" caption="CST_PIS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CST_COFINS" caption="CST_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CALC_BC_PIS" caption="CALC_BC_PIS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CALC_BC_COFINS" caption="CALC_BC_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="NATUREZA_RECEITA_SPED" caption="NATUREZA_RECEITA_SPED" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_ITEM_SPED_CONTRIB" caption="VL_ITEM_SPED_CONTRIB" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_BC_PIS" caption="VL_BC_PIS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_PIS" caption="ALIQ_PIS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_PIS" caption="VL_PIS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_BC_COFINS" caption="VL_BC_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_COFINS" caption="ALIQ_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_COFINS" caption="VL_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="TIPO_ESCR_SPED_CONTRIB" caption="TIPO_ESCR_SPED_CONTRIB" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="INC_TRIB_SPED_CONTRIB" caption="INC_TRIB_SPED_CONTRIB" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="APU_CREDITOS_SPED_CONTRIB" caption="APU_CREDITOS_SPED_CONTRIB" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+  </fields>
+  <page_fields alignment="taLeftJustify">
+    <fields>
+      <field name="MOV" caption="MOV" alignment="taLeftJustify" captionwidth="100" field_name="MOV" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="EMPRESA" caption="EMPRESA" alignment="taLeftJustify" captionwidth="100" field_name="EMPRESA" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="NCM" caption="NCM" alignment="taLeftJustify" captionwidth="100" field_name="NCM" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+    </fields>
+  </page_fields>
+  <xaxis_fields alignment="taLeftJustify" GrandTotalPosition="fctp_Hide" UseGrandTotalPositionFromMeasure="0" DefaultTypeSort="md_tsa_ByAxisValue" AxisType="at_Standard">
+    <fields/>
+    <AdditionalGrandTotals/>
+  </xaxis_fields>
+  <yaxis_fields alignment="taLeftJustify" GrandTotalPosition="fctp_Hide" UseGrandTotalPositionFromMeasure="0" DefaultTypeSort="md_tsa_ByAxisValue" AxisType="at_Standard">
+    <fields>
+      <field name="CST_ICMS" caption="CST_ICMS" alignment="taLeftJustify" captionwidth="100" field_name="CST_ICMS" SortDirection="fcsd_Asc" TotalPosition="fctp_Hide" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="CFOP" caption="CFOP" alignment="taLeftJustify" captionwidth="100" field_name="CFOP" SortDirection="fcsd_Asc" TotalPosition="fctp_Hide" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="ALIQ_ICMS" caption="ALIQ_ICMS" alignment="taLeftJustify" captionwidth="100" field_name="ALIQ_ICMS" SortDirection="fcsd_Desc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+    </fields>
+    <AdditionalGrandTotals/>
+  </yaxis_fields>
+  <measure_fields alignment="taLeftJustify" caption="Measures" CaptionWidth="100" Region="X" Position="0">
+    <fields>
+      <field name="TOTAL" caption="TOTAL OPERACAO" alignment="taRightJustify" captionwidth="100" field_name="TOTAL" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="BCICMS" caption="BC ICMS" alignment="taRightJustify" captionwidth="100" field_name="BCICMS" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="ICMS" caption="ICMS" alignment="taRightJustify" captionwidth="100" field_name="ICMS" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="0" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="-1" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="ISENTO_ICMS" caption="ISENTO" alignment="taRightJustify" captionwidth="100" field_name="ISENTO_ICMS" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="OUTROS_ICMS" caption="OUTROS" alignment="taRightJustify" captionwidth="100" field_name="OUTROS_ICMS" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="ICMSR" caption="TOTAL ICMS ST" alignment="taRightJustify" captionwidth="100" field_name="ICMSR" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="IPI" caption="TOTAL IPI" alignment="taRightJustify" captionwidth="100" field_name="IPI" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="DIFALIQ" caption="DIF.ALIQUOTA" alignment="taRightJustify" captionwidth="100" field_name="DIFALIQ" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+    </fields>
+  </measure_fields>
+  <selection col="0" row="3" measure="2"/>
+  <options HideColZeros="0" HideRowZeros="0"/>
+  <groups version="2" timestamp="22/05/2014 11:33:09"/>
+  <filters version="2" timestamp="22/05/2014 11:33:09">
+    <filter name="#UVFilter">
+      <field name="MOV" type="uvfield" fcxVarType="fcvtString" StoreEnabledValues="0">
+        <values>
+          <value value="SAIDA  "/>
+        </values>
+      </field>
+    </filter>
+  </filters>
+  <charts version="2" timestamp="22/05/2014 11:33:09">
+    <chart timestamp="22/05/2014 11:33:09">
+      <chart_properties SeriesType="TBarSeries" StackType="mbSide" TypeChartData="tcd_ByAxisMeasures" CategoriesAxis="ar_RowAxis" SeriesAxis="ar_ColAxis" CategoriesFieldCount="1" SeriesFieldCount="1" MeasureFieldIndex="0" LogType="ltSimple" MarksShowStyle="ssNone" SkipNullPoints="0" AllSeriesMarksStyle="smsLabelValue" Legend_Visible="-1" View3D="-1"/>
+      <View3DProperties Chart3DPercent="15" Elevation="345" Orthogonal="-1" HorizOffset="0" VertOffset="0" Perspective="15" Rotation="345" Tilt="0" Zoom="100"/>
+    </chart>
+  </charts>
+</slice>
+[EFD ICMS_IPI - REL.ENTRADAS_FIM]
+
+[EFD ICMS_IPI - REL.SAIDAS_INI]
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<slice version="2" timestamp="22/05/2014 09:31:02">
+  <Script ScriptLanguage="" Code=""/>
+  <fields>
+    <field name="EMPRESA" caption="EMPRESA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="NUM_NF" caption="NUM_NF" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="PESSOA" caption="PESSOA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="MOV" caption="MOV" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="TIPO_DOC" caption="TIPO_DOC" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="SPED_CONTRIB" caption="SPED_CONTRIB" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="TIPO_EMISSAO" caption="TIPO_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CFOP" caption="CFOP" Width="64" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ESTAT_CFOP" caption="ESTAT_CFOP" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="EMISSAO" caption="EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Year_EMISSAO" caption="Year_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Month_EMISSAO" caption="Month_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Day_EMISSAO" caption="Day_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#DayOfWeeek_EMISSAO" caption="Day_of_week_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ENTSAIDA" caption="ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Year_ENTSAIDA" caption="Year_ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Month_ENTSAIDA" caption="Month_ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Day_ENTSAIDA" caption="Day_ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#DayOfWeeek_ENTSAIDA" caption="Day_of_week_ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="DATA_REG" caption="DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Year_DATA_REG" caption="Year_DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Month_DATA_REG" caption="Month_DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Day_DATA_REG" caption="Day_DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#DayOfWeeek_DATA_REG" caption="Day_of_week_DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="COD_ITEM" caption="COD_ITEM" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="PRODUTO" caption="PRODUTO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="QTDE" caption="QTDE" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="UN" caption="UN" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="NCM" caption="NCM" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="COD_SIT" caption="COD_SIT" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CST_ICMS" caption="CST_ICMS" Width="44" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CST_IPI" caption="CST_IPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="TOTAL" caption="TOTAL" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="BCICMS" caption="BCICMS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_ICMS" caption="ALIQ_ICMS" Width="43" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ICMS" caption="ICMS" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="BCIPI" caption="BCIPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_IPI" caption="ALIQ_IPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="IPI" caption="IPI" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ISENTO_ICMS" caption="ISENTO_ICMS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="OUTROS_ICMS" caption="OUTROS_ICMS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ISENTO_IPI" caption="ISENTO_IPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="OUTROS_IPI" caption="OUTROS_IPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="DIFALIQ" caption="DIFALIQ" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ICMSR" caption="ICMSR" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="BC_INSS" caption="BC_INSS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_INSS" caption="ALIQ_INSS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="INSS" caption="INSS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CST_PIS" caption="CST_PIS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CST_COFINS" caption="CST_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CALC_BC_PIS" caption="CALC_BC_PIS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CALC_BC_COFINS" caption="CALC_BC_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="NATUREZA_RECEITA_SPED" caption="NATUREZA_RECEITA_SPED" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_BC_PIS" caption="VL_BC_PIS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_PIS" caption="ALIQ_PIS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_PIS" caption="VL_PIS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="TIPO_ESCR_SPED_CONTRIB" caption="TIPO_ESCR_SPED_CONTRIB" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="INC_TRIB_SPED_CONTRIB" caption="INC_TRIB_SPED_CONTRIB" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="APU_CREDITOS_SPED_CONTRIB" caption="APU_CREDITOS_SPED_CONTRIB" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+  </fields>
+  <page_fields alignment="taLeftJustify">
+    <fields>
+      <field name="EMPRESA" caption="EMPRESA" alignment="taLeftJustify" captionwidth="100" field_name="EMPRESA" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="NCM" caption="NCM" alignment="taLeftJustify" captionwidth="100" field_name="NCM" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+    </fields>
+  </page_fields>
+  <xaxis_fields alignment="taLeftJustify" GrandTotalPosition="fctp_Hide" UseGrandTotalPositionFromMeasure="0" DefaultTypeSort="md_tsa_ByAxisValue" AxisType="at_Standard">
+    <fields/>
+    <AdditionalGrandTotals/>
+  </xaxis_fields>
+  <yaxis_fields alignment="taLeftJustify" GrandTotalPosition="fctp_After" UseGrandTotalPositionFromMeasure="0" DefaultTypeSort="md_tsa_ByAxisValue" AxisType="at_Standard">
+    <fields>
+      <field name="CST_ICMS" caption="CST_ICMS" alignment="taLeftJustify" captionwidth="100" field_name="CST_ICMS" SortDirection="fcsd_Asc" TotalPosition="fctp_Hide" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="CFOP" caption="CFOP" alignment="taLeftJustify" captionwidth="100" field_name="CFOP" SortDirection="fcsd_Asc" TotalPosition="fctp_Hide" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="ALIQ_ICMS" caption="ALIQ_ICMS" alignment="taLeftJustify" captionwidth="100" field_name="ALIQ_ICMS" SortDirection="fcsd_Desc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+    </fields>
+    <AdditionalGrandTotals/>
+  </yaxis_fields>
+  <measure_fields alignment="taLeftJustify" caption="Measures" CaptionWidth="100" Region="X" Position="0">
+    <fields>
+      <field name="TOTAL" caption="TOTAL OPERACAO" alignment="taRightJustify" captionwidth="100" field_name="TOTAL" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="BCICMS" caption="BC ICMS" alignment="taRightJustify" captionwidth="100" field_name="BCICMS" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="ICMS" caption="ICMS" alignment="taRightJustify" captionwidth="100" field_name="ICMS" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="0" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="-1" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="ISENTO_ICMS" caption="ISENTO" alignment="taRightJustify" captionwidth="100" field_name="ISENTO_ICMS" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="OUTROS_ICMS" caption="OUTROS" alignment="taRightJustify" captionwidth="100" field_name="OUTROS_ICMS" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="ICMSR" caption="TOTAL ICMS ST" alignment="taRightJustify" captionwidth="100" field_name="ICMSR" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="IPI" caption="TOTAL IPI" alignment="taRightJustify" captionwidth="100" field_name="IPI" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="DIFALIQ" caption="DIF.ALIQUOTA" alignment="taRightJustify" captionwidth="100" field_name="DIFALIQ" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+    </fields>
+  </measure_fields>
+  <selection col="0" row="9" measure="0"/>
+  <options HideColZeros="0" HideRowZeros="0"/>
+  <groups version="2" timestamp="22/05/2014 09:31:02"/>
+  <filters version="2" timestamp="22/05/2014 09:31:02">
+    <filter name="#UVFilter">
+      <field name="MOV" type="uvfield" fcxVarType="fcvtString" StoreEnabledValues="0">
+        <values>
+          <value value="ENTRADA"/>
+        </values>
+      </field>
+    </filter>
+  </filters>
+  <charts version="2" timestamp="22/05/2014 09:31:02">
+    <chart timestamp="22/05/2014 09:31:02">
+      <chart_properties SeriesType="TBarSeries" StackType="mbSide" TypeChartData="tcd_ByAxisMeasures" CategoriesAxis="ar_RowAxis" SeriesAxis="ar_ColAxis" CategoriesFieldCount="1" SeriesFieldCount="1" MeasureFieldIndex="0" LogType="ltSimple" MarksShowStyle="ssNone" SkipNullPoints="0" AllSeriesMarksStyle="smsLabelValue" Legend_Visible="-1" View3D="-1"/>
+      <View3DProperties Chart3DPercent="15" Elevation="345" Orthogonal="-1" HorizOffset="0" VertOffset="0" Perspective="15" Rotation="345" Tilt="0" Zoom="100"/>
+    </chart>
+  </charts>
+</slice>
+[EFD ICMS_IPI - REL.SAIDAS_FIM]
+
+[EFD CONTRIBUICOES - REGIME CUMULATIVO_INI]
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<slice version="2" timestamp="29/05/2014 16:31:03">
+  <Script ScriptLanguage="" Code=""/>
+  <fields>
+    <field name="EMPRESA" caption="EMPRESA" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="NUM_NF" caption="NUM_NF" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="PESSOA" caption="PESSOA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="MOV" caption="MOV" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="TIPO_DOC" caption="TIPO_DOC" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="SPED_CONTRIB" caption="SPED_CONTRIB" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="SPED_FISCAL" caption="SPED_FISCAL" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="TIPO_EMISSAO" caption="TIPO_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CFOP" caption="CFOP" Width="64" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="-1" CollapsedSubGroup="0"/>
+    <field name="ESTAT_CFOP" caption="ESTAT_CFOP" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="EMISSAO" caption="EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Year_EMISSAO" caption="Year_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Month_EMISSAO" caption="Month_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Day_EMISSAO" caption="Day_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#DayOfWeeek_EMISSAO" caption="Day_of_week_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ENTSAIDA" caption="ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Year_ENTSAIDA" caption="Year_ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Month_ENTSAIDA" caption="Month_ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Day_ENTSAIDA" caption="Day_ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#DayOfWeeek_ENTSAIDA" caption="Day_of_week_ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="DATA_REG" caption="DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Year_DATA_REG" caption="Year_DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Month_DATA_REG" caption="Month_DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Day_DATA_REG" caption="Day_DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#DayOfWeeek_DATA_REG" caption="Day_of_week_DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="COD_ITEM" caption="COD_ITEM" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="PRODUTO" caption="PRODUTO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="QTDE" caption="QTDE" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="UN" caption="UN" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="NCM" caption="NCM" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="COD_SIT" caption="COD_SIT" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CST_ICMS" caption="CST_ICMS" Width="44" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CST_IPI" caption="CST_IPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="TOTAL" caption="TOTAL" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="BCICMS" caption="BCICMS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_ICMS" caption="ALIQ_ICMS" Width="43" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ICMS" caption="ICMS" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="BCIPI" caption="BCIPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_IPI" caption="ALIQ_IPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="IPI" caption="IPI" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="IPI_DOC" caption="IPI_DOC" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ISENTO_ICMS" caption="ISENTO_ICMS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="OUTROS_ICMS" caption="OUTROS_ICMS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ISENTO_IPI" caption="ISENTO_IPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="OUTROS_IPI" caption="OUTROS_IPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="DIFALIQ" caption="DIFALIQ" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ICMSR" caption="ICMSR" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="BC_INSS" caption="BC_INSS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_INSS" caption="ALIQ_INSS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="INSS" caption="INSS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CST_PIS" caption="CST_PIS" Width="92" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="-1" CollapsedSubGroup="0"/>
+    <field name="CST_COFINS" caption="CST_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CALC_BC_PIS" caption="CALC_BC_PIS" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CALC_BC_COFINS" caption="CALC_BC_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="NATUREZA_RECEITA_SPED" caption="NATUREZA_RECEITA_SPED" Width="29" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="GRUPO_SPED_CONTRIB" caption="GRUPO_SPED_CONTRIB" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_ITEM_SPED_CONTRIB" caption="VL_ITEM_SPED_CONTRIB" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_BC_PIS" caption="VL_BC_PIS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_PIS" caption="ALIQ_PIS" Width="46" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_PIS" caption="VL_PIS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_BC_COFINS" caption="VL_BC_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_COFINS" caption="ALIQ_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_COFINS" caption="VL_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="TIPO_ESCR_SPED_CONTRIB" caption="TIPO_ESCR_SPED_CONTRIB" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="INC_TRIB_SPED_CONTRIB" caption="INC_TRIB_SPED_CONTRIB" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="APU_CREDITOS_SPED_CONTRIB" caption="APU_CREDITOS_SPED_CONTRIB" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+  </fields>
+  <page_fields alignment="taLeftJustify">
+    <fields>
+      <field name="MOV" caption="MOV" alignment="taLeftJustify" captionwidth="100" field_name="MOV" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="EMPRESA" caption="EMPRESA" alignment="taLeftJustify" captionwidth="100" field_name="EMPRESA" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="SPED_CONTRIB" caption="SPED_CONTRIB" alignment="taLeftJustify" captionwidth="100" field_name="SPED_CONTRIB" SortDirection="fcsd_Asc" TotalPosition="fctp_Hide" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals>
+          <Total AgrFunc="af_Sum"/>
+        </AdditionalTotals>
+      </field>
+      <field name="ESTAT_CFOP" caption="ESTAT_CFOP" alignment="taLeftJustify" captionwidth="100" field_name="ESTAT_CFOP" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="TIPO_ESCR_SPED_CONTRIB" caption="TIPO_ESCR_SPED_CONTRIB" alignment="taLeftJustify" captionwidth="100" field_name="TIPO_ESCR_SPED_CONTRIB" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="INC_TRIB_SPED_CONTRIB" caption="INC_TRIB_SPED_CONTRIB" alignment="taLeftJustify" captionwidth="100" field_name="INC_TRIB_SPED_CONTRIB" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="APU_CREDITOS_SPED_CONTRIB" caption="APU_CREDITOS_SPED_CONTRIB" alignment="taLeftJustify" captionwidth="100" field_name="APU_CREDITOS_SPED_CONTRIB" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+    </fields>
+  </page_fields>
+  <xaxis_fields alignment="taLeftJustify" GrandTotalPosition="fctp_Hide" UseGrandTotalPositionFromMeasure="0" DefaultTypeSort="md_tsa_ByAxisValue" AxisType="at_Standard">
+    <fields/>
+    <AdditionalGrandTotals/>
+  </xaxis_fields>
+  <yaxis_fields alignment="taLeftJustify" GrandTotalPosition="fctp_After" UseGrandTotalPositionFromMeasure="0" DefaultTypeSort="md_tsa_ByAxisValue" AxisType="at_Standard">
+    <fields>
+      <field name="CST_PIS" caption="CST_PIS" alignment="taLeftJustify" captionwidth="86" field_name="CST_PIS" SortDirection="fcsd_Asc" TotalPosition="fctp_Hide" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals>
+          <Total AgrFunc="af_Sum"/>
+        </AdditionalTotals>
+      </field>
+      <field name="CFOP" caption="CFOP" alignment="taLeftJustify" captionwidth="67" field_name="CFOP" SortDirection="fcsd_Asc" TotalPosition="fctp_Hide" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="ALIQ_PIS" caption="ALIQ_PIS" alignment="taLeftJustify" captionwidth="100" field_name="ALIQ_PIS" SortDirection="fcsd_Asc" TotalPosition="fctp_Hide" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="NATUREZA_RECEITA_SPED" caption="NATUREZA_RECEITA_SPED" alignment="taLeftJustify" captionwidth="100" field_name="NATUREZA_RECEITA_SPED" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+    </fields>
+    <AdditionalGrandTotals/>
+  </yaxis_fields>
+  <measure_fields alignment="taLeftJustify" caption="Measures" CaptionWidth="100" Region="X" Position="0">
+    <fields>
+      <field name="TOTAL" caption="TOTAL OPERACAO" alignment="taRightJustify" captionwidth="100" field_name="TOTAL" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="IPI" caption="TOTAL DO IPI" alignment="taRightJustify" captionwidth="100" field_name="IPI" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="VL_ITEM_SPED_CONTRIB" caption="VALOR TOTAL ITEM " alignment="taRightJustify" captionwidth="100" field_name="VL_ITEM_SPED_CONTRIB" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="VL_BC_PIS" caption="BC PIS" alignment="taRightJustify" captionwidth="100" field_name="VL_BC_PIS" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="VL_BC_COFINS" caption="BC COFINS" alignment="taRightJustify" captionwidth="100" field_name="VL_BC_COFINS" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="VL_PIS" caption="VALOR PIS/PASEP" alignment="taRightJustify" captionwidth="100" field_name="VL_PIS" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="VL_COFINS" caption="VALOR COFINS" alignment="taRightJustify" captionwidth="100" field_name="VL_COFINS" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+    </fields>
+  </measure_fields>
+  <selection col="0" row="1" measure="0"/>
+  <options HideColZeros="0" HideRowZeros="0"/>
+  <groups version="2" timestamp="29/05/2014 16:31:03"/>
+  <filters version="2" timestamp="29/05/2014 16:31:03">
+    <filter name="#UVFilter">
+      <field name="SPED_CONTRIB" type="uvfield" fcxVarType="fcvtString" StoreEnabledValues="0">
+        <values>
+          <value value="N"/>
+        </values>
+      </field>
+    </filter>
+  </filters>
+  <charts version="2" timestamp="29/05/2014 16:31:03">
+    <chart timestamp="29/05/2014 16:31:03">
+      <chart_properties SeriesType="TBarSeries" StackType="mbSide" TypeChartData="tcd_ByAxisMeasures" CategoriesAxis="ar_RowAxis" SeriesAxis="ar_ColAxis" CategoriesFieldCount="1" SeriesFieldCount="1" MeasureFieldIndex="0" LogType="ltSimple" MarksShowStyle="ssNone" SkipNullPoints="0" AllSeriesMarksStyle="smsLabelValue" Legend_Visible="-1" View3D="-1"/>
+      <View3DProperties Chart3DPercent="15" Elevation="345" Orthogonal="-1" HorizOffset="0" VertOffset="0" Perspective="15" Rotation="345" Tilt="0" Zoom="100"/>
+    </chart>
+  </charts>
+</slice>
+[EFD CONTRIBUICOES - REGIME CUMULATIVO_FIM]
+
+[EFD CONTRIBUICOES - GRUPO P (DESONERACAO)_INI]
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<slice version="2" timestamp="22/05/2014 11:37:10">
+  <Script ScriptLanguage="" Code=""/>
+  <fields>
+    <field name="EMPRESA" caption="EMPRESA" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="NUM_NF" caption="NUM_NF" Width="80" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="PESSOA" caption="PESSOA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="MOV" caption="MOV" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="TIPO_DOC" caption="TIPO_DOC" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="SPED_CONTRIB" caption="SPED_CONTRIB" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="TIPO_EMISSAO" caption="TIPO_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CFOP" caption="CFOP" Width="64" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ESTAT_CFOP" caption="ESTAT_CFOP" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="EMISSAO" caption="EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Year_EMISSAO" caption="Year_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Month_EMISSAO" caption="Month_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Day_EMISSAO" caption="Day_EMISSAO" Width="48" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#DayOfWeeek_EMISSAO" caption="Day_of_week_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ENTSAIDA" caption="ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Year_ENTSAIDA" caption="Year_ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Month_ENTSAIDA" caption="Month_ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Day_ENTSAIDA" caption="Day_ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#DayOfWeeek_ENTSAIDA" caption="Day_of_week_ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="DATA_REG" caption="DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Year_DATA_REG" caption="Year_DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Month_DATA_REG" caption="Month_DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Day_DATA_REG" caption="Day_DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#DayOfWeeek_DATA_REG" caption="Day_of_week_DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="COD_ITEM" caption="COD_ITEM" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="PRODUTO" caption="PRODUTO" Width="348" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="QTDE" caption="QTDE" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="UN" caption="UN" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="NCM" caption="NCM" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="-1" CollapsedSubGroup="0"/>
+    <field name="COD_SIT" caption="COD_SIT" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CST_ICMS" caption="CST_ICMS" Width="44" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CST_IPI" caption="CST_IPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="TOTAL" caption="TOTAL" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="BCICMS" caption="BCICMS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_ICMS" caption="ALIQ_ICMS" Width="40" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ICMS" caption="ICMS" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="BCIPI" caption="BCIPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_IPI" caption="ALIQ_IPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="IPI" caption="IPI" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ISENTO_ICMS" caption="ISENTO_ICMS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="OUTROS_ICMS" caption="OUTROS_ICMS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ISENTO_IPI" caption="ISENTO_IPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="OUTROS_IPI" caption="OUTROS_IPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="DIFALIQ" caption="DIFALIQ" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ICMSR" caption="ICMSR" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="BC_INSS" caption="BC_INSS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_INSS" caption="ALIQ_INSS" Width="42" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="INSS" caption="INSS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CST_PIS" caption="CST_PIS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CST_COFINS" caption="CST_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CALC_BC_PIS" caption="CALC_BC_PIS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CALC_BC_COFINS" caption="CALC_BC_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="NATUREZA_RECEITA_SPED" caption="NATUREZA_RECEITA_SPED" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_ITEM_SPED_CONTRIB" caption="VL_ITEM_SPED_CONTRIB" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_BC_PIS" caption="VL_BC_PIS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_PIS" caption="ALIQ_PIS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_PIS" caption="VL_PIS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_BC_COFINS" caption="VL_BC_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_COFINS" caption="ALIQ_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_COFINS" caption="VL_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="TIPO_ESCR_SPED_CONTRIB" caption="TIPO_ESCR_SPED_CONTRIB" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="INC_TRIB_SPED_CONTRIB" caption="INC_TRIB_SPED_CONTRIB" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="APU_CREDITOS_SPED_CONTRIB" caption="APU_CREDITOS_SPED_CONTRIB" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+  </fields>
+  <page_fields alignment="taLeftJustify">
+    <fields>
+      <field name="ESTAT_CFOP" caption="ESTAT_CFOP" alignment="taLeftJustify" captionwidth="100" field_name="ESTAT_CFOP" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="EMPRESA" caption="EMPRESA" alignment="taLeftJustify" captionwidth="100" field_name="EMPRESA" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="CFOP" caption="CFOP" alignment="taLeftJustify" captionwidth="100" field_name="CFOP" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="PRODUTO" caption="PRODUTO" alignment="taLeftJustify" captionwidth="100" field_name="PRODUTO" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+    </fields>
+  </page_fields>
+  <xaxis_fields alignment="taLeftJustify" GrandTotalPosition="fctp_Hide" UseGrandTotalPositionFromMeasure="0" DefaultTypeSort="md_tsa_ByAxisValue" AxisType="at_Standard">
+    <fields/>
+    <AdditionalGrandTotals>
+      <Total AgrFunc="af_Sum"/>
+      <Total AgrFunc="af_Max"/>
+    </AdditionalGrandTotals>
+  </xaxis_fields>
+  <yaxis_fields alignment="taLeftJustify" GrandTotalPosition="fctp_After" UseGrandTotalPositionFromMeasure="0" DefaultTypeSort="md_tsa_ByAxisValue" AxisType="at_Standard">
+    <fields>
+      <field name="NCM" caption="NCM" alignment="taLeftJustify" captionwidth="100" field_name="NCM" SortDirection="fcsd_Asc" TotalPosition="fctp_Hide" UseTotalPositionFromMeasure="-1">
+        <AdditionalTotals/>
+      </field>
+      <field name="NUM_NF" caption="NUM_NF" alignment="taLeftJustify" captionwidth="100" field_name="NUM_NF" SortDirection="fcsd_Asc" TotalPosition="fctp_Hide" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="#Day_EMISSAO" caption="DIA" alignment="taLeftJustify" captionwidth="100" field_name="#Day_EMISSAO" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="ALIQ_INSS" caption="ALIQ_INSS" alignment="taLeftJustify" captionwidth="100" field_name="ALIQ_INSS" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+    </fields>
+    <AdditionalGrandTotals/>
+  </yaxis_fields>
+  <measure_fields alignment="taLeftJustify" caption="Measures" CaptionWidth="100" Region="X" Position="0">
+    <fields>
+      <field name="TOTAL" caption="TOTAL OPERACAO" alignment="taRightJustify" captionwidth="100" field_name="TOTAL" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="IPI" caption="TOTAL DO IPI" alignment="taRightJustify" captionwidth="100" field_name="IPI" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="BC_INSS" caption="RECEITA BRUTA" alignment="taRightJustify" captionwidth="100" field_name="BC_INSS" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="INSS" caption="VALOR CONTRIBUIÇÃO" alignment="taRightJustify" captionwidth="100" field_name="INSS" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+    </fields>
+  </measure_fields>
+  <selection col="0" row="1" measure="0"/>
+  <options HideColZeros="0" HideRowZeros="0"/>
+  <groups version="2" timestamp="22/05/2014 11:37:10"/>
+  <filters version="2" timestamp="22/05/2014 11:37:10">
+    <filter name="#UVFilter">
+      <field name="MOV" type="uvfield" fcxVarType="fcvtString" StoreEnabledValues="0">
+        <values>
+          <value value="ENTRADA"/>
+        </values>
+      </field>
+      <field name="ESTAT_CFOP" type="uvfield" fcxVarType="fcvtString" StoreEnabledValues="0">
+        <values>
+          <value nullvalue=""/>
+        </values>
+      </field>
+    </filter>
+  </filters>
+  <charts version="2" timestamp="22/05/2014 11:37:10">
+    <chart timestamp="22/05/2014 11:37:10">
+      <chart_properties SeriesType="TBarSeries" StackType="mbSide" TypeChartData="tcd_ByAxisMeasures" CategoriesAxis="ar_RowAxis" SeriesAxis="ar_ColAxis" CategoriesFieldCount="1" SeriesFieldCount="1" MeasureFieldIndex="0" LogType="ltSimple" MarksShowStyle="ssNone" SkipNullPoints="0" AllSeriesMarksStyle="smsLabelValue" Legend_Visible="-1" View3D="-1"/>
+      <View3DProperties Chart3DPercent="15" Elevation="345" Orthogonal="-1" HorizOffset="0" VertOffset="0" Perspective="15" Rotation="345" Tilt="0" Zoom="100"/>
+    </chart>
+  </charts>
+</slice>
+[EFD CONTRIBUICOES - GRUPO P (DESONERACAO)_FIM]
+
+[EFD CONTRIBUICOES - REGIME NAO CUMULATIVO_INI]
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<slice version="2" timestamp="23/05/2014 09:50:38">
+  <Script ScriptLanguage="" Code=""/>
+  <fields>
+    <field name="EMPRESA" caption="EMPRESA" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="NUM_NF" caption="NUM_NF" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="PESSOA" caption="PESSOA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="MOV" caption="MOV" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="TIPO_DOC" caption="TIPO_DOC" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="SPED_CONTRIB" caption="SPED_CONTRIB" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="TIPO_EMISSAO" caption="TIPO_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CFOP" caption="CFOP" Width="64" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ESTAT_CFOP" caption="ESTAT_CFOP" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="EMISSAO" caption="EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Year_EMISSAO" caption="Year_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Month_EMISSAO" caption="Month_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Day_EMISSAO" caption="Day_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#DayOfWeeek_EMISSAO" caption="Day_of_week_EMISSAO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ENTSAIDA" caption="ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Year_ENTSAIDA" caption="Year_ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Month_ENTSAIDA" caption="Month_ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Day_ENTSAIDA" caption="Day_ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#DayOfWeeek_ENTSAIDA" caption="Day_of_week_ENTSAIDA" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="DATA_REG" caption="DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Year_DATA_REG" caption="Year_DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Month_DATA_REG" caption="Month_DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#Day_DATA_REG" caption="Day_DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="#DayOfWeeek_DATA_REG" caption="Day_of_week_DATA_REG" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="COD_ITEM" caption="COD_ITEM" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="PRODUTO" caption="PRODUTO" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="QTDE" caption="QTDE" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="UN" caption="UN" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="NCM" caption="NCM" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="COD_SIT" caption="COD_SIT" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CST_ICMS" caption="CST_ICMS" Width="44" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CST_IPI" caption="CST_IPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="TOTAL" caption="TOTAL" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="BCICMS" caption="BCICMS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_ICMS" caption="ALIQ_ICMS" Width="43" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ICMS" caption="ICMS" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="BCIPI" caption="BCIPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_IPI" caption="ALIQ_IPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="IPI" caption="IPI" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ISENTO_ICMS" caption="ISENTO_ICMS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="OUTROS_ICMS" caption="OUTROS_ICMS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ISENTO_IPI" caption="ISENTO_IPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="OUTROS_IPI" caption="OUTROS_IPI" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="DIFALIQ" caption="DIFALIQ" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ICMSR" caption="ICMSR" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="BC_INSS" caption="BC_INSS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_INSS" caption="ALIQ_INSS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="INSS" caption="INSS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CST_PIS" caption="CST_PIS" Width="92" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CST_COFINS" caption="CST_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CALC_BC_PIS" caption="CALC_BC_PIS" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="CALC_BC_COFINS" caption="CALC_BC_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="NATUREZA_RECEITA_SPED" caption="NATUREZA_RECEITA_SPED" Width="29" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_ITEM_SPED_CONTRIB" caption="VL_ITEM_SPED_CONTRIB" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_BC_PIS" caption="VL_BC_PIS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_PIS" caption="ALIQ_PIS" Width="46" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_PIS" caption="VL_PIS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_BC_COFINS" caption="VL_BC_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="ALIQ_COFINS" caption="ALIQ_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="VL_COFINS" caption="VL_COFINS" Width="0" Height="0" PopupWidth="120" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="TIPO_ESCR_SPED_CONTRIB" caption="TIPO_ESCR_SPED_CONTRIB" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="INC_TRIB_SPED_CONTRIB" caption="INC_TRIB_SPED_CONTRIB" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+    <field name="APU_CREDITOS_SPED_CONTRIB" caption="APU_CREDITOS_SPED_CONTRIB" Width="0" Height="0" PopupWidth="180" PopupShowAvailable="0" Collapsed="0" CollapsedSubGroup="0"/>
+  </fields>
+  <page_fields alignment="taLeftJustify">
+    <fields>
+      <field name="EMPRESA" caption="EMPRESA" alignment="taLeftJustify" captionwidth="100" field_name="EMPRESA" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="SPED_CONTRIB" caption="SPED_CONTRIB" alignment="taLeftJustify" captionwidth="100" field_name="SPED_CONTRIB" SortDirection="fcsd_Asc" TotalPosition="fctp_Hide" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals>
+          <Total AgrFunc="af_Sum"/>
+        </AdditionalTotals>
+      </field>
+      <field name="ESTAT_CFOP" caption="ESTAT_CFOP" alignment="taLeftJustify" captionwidth="100" field_name="ESTAT_CFOP" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="TIPO_ESCR_SPED_CONTRIB" caption="TIPO_ESCR_SPED_CONTRIB" alignment="taLeftJustify" captionwidth="100" field_name="TIPO_ESCR_SPED_CONTRIB" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="INC_TRIB_SPED_CONTRIB" caption="INC_TRIB_SPED_CONTRIB" alignment="taLeftJustify" captionwidth="100" field_name="INC_TRIB_SPED_CONTRIB" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="APU_CREDITOS_SPED_CONTRIB" caption="APU_CREDITOS_SPED_CONTRIB" alignment="taLeftJustify" captionwidth="100" field_name="APU_CREDITOS_SPED_CONTRIB" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="TIPO_DOC" caption="TIPO_DOC" alignment="taLeftJustify" captionwidth="100" field_name="TIPO_DOC" SortDirection="fcsd_Asc" TotalPosition="fctp_After" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+    </fields>
+  </page_fields>
+  <xaxis_fields alignment="taLeftJustify" GrandTotalPosition="fctp_Hide" UseGrandTotalPositionFromMeasure="0" DefaultTypeSort="md_tsa_ByAxisValue" AxisType="at_Standard">
+    <fields/>
+    <AdditionalGrandTotals/>
+  </xaxis_fields>
+  <yaxis_fields alignment="taLeftJustify" GrandTotalPosition="fctp_After" UseGrandTotalPositionFromMeasure="0" DefaultTypeSort="md_tsa_ByAxisValue" AxisType="at_Standard">
+    <fields>
+      <field name="MOV" caption="MOV" alignment="taLeftJustify" captionwidth="100" field_name="MOV" SortDirection="fcsd_Asc" TotalPosition="fctp_After" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="CST_PIS" caption="CST_PIS" alignment="taLeftJustify" captionwidth="86" field_name="CST_PIS" SortDirection="fcsd_Asc" TotalPosition="fctp_Hide" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals>
+          <Total AgrFunc="af_Sum"/>
+        </AdditionalTotals>
+      </field>
+      <field name="CFOP" caption="CFOP" alignment="taLeftJustify" captionwidth="67" field_name="CFOP" SortDirection="fcsd_Asc" TotalPosition="fctp_Hide" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="NUM_NF" caption="NUM_NF" alignment="taLeftJustify" captionwidth="100" field_name="NUM_NF" SortDirection="fcsd_Asc" TotalPosition="fctp_After" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="ALIQ_PIS" caption="ALIQ_PIS" alignment="taLeftJustify" captionwidth="100" field_name="ALIQ_PIS" SortDirection="fcsd_Asc" TotalPosition="fctp_Hide" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+      <field name="NATUREZA_RECEITA_SPED" caption="NATUREZA_RECEITA_SPED" alignment="taLeftJustify" captionwidth="100" field_name="NATUREZA_RECEITA_SPED" SortDirection="fcsd_Asc" TotalPosition="fctp_Before" UseTotalPositionFromMeasure="0">
+        <AdditionalTotals/>
+      </field>
+    </fields>
+    <AdditionalGrandTotals/>
+  </yaxis_fields>
+  <measure_fields alignment="taLeftJustify" caption="Measures" CaptionWidth="100" Region="X" Position="0">
+    <fields>
+      <field name="TOTAL" caption="TOTAL OPERACAO" alignment="taRightJustify" captionwidth="100" field_name="TOTAL" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="IPI" caption="TOTAL DO IPI" alignment="taRightJustify" captionwidth="100" field_name="IPI" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="VL_ITEM_SPED_CONTRIB" caption="VALOR TOTAL ITEM " alignment="taRightJustify" captionwidth="100" field_name="VL_ITEM_SPED_CONTRIB" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="VL_BC_PIS" caption="BC PIS" alignment="taRightJustify" captionwidth="100" field_name="VL_BC_PIS" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="VL_BC_COFINS" caption="BC COFINS" alignment="taRightJustify" captionwidth="100" field_name="VL_BC_COFINS" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="VL_PIS" caption="VALOR PIS/PASEP" alignment="taRightJustify" captionwidth="100" field_name="VL_PIS" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+      <field name="VL_COFINS" caption="VALOR COFINS" alignment="taRightJustify" captionwidth="100" field_name="VL_COFINS" AgrFunc="af_Sum" Visible="-1" DisplayAs="da_Value" ScriptFunction="" ScriptOrder="-1" FilterScriptFunction="" ScriptFunctionForTotals="" ScriptOrderForTotals="-1" CalcAllCells="0" CalcAllCellsForTotals="0" DefaultTotalPosition="fctp_After" UseDifferentAggForTotals="0" AgrFuncForTotals="af_Sum" CalcTotalsOnTotals="0" UseXAxisTotalsAsBase="0" ConflictResolve="tcrEmptyValue">
+        <display_format decimal_separator="," format_str="%2.2n" kind="fkNumeric" QuarterDisplayFormat="qdf_System" WeekDayDisplayFormat="wddf_Long" WeekNumberDisplayFormat="wndf_System" MonthDisplayFormat="mdf_Long"/>
+        <HIGHLIGHTS/>
+      </field>
+    </fields>
+  </measure_fields>
+  <selection col="0" row="430" measure="2"/>
+  <options HideColZeros="0" HideRowZeros="0"/>
+  <groups version="2" timestamp="23/05/2014 09:50:38"/>
+  <filters version="2" timestamp="23/05/2014 09:50:38">
+    <filter name="#UVFilter">
+      <field name="EMPRESA" type="uvfield" fcxVarType="fcvtString" StoreEnabledValues="0">
+        <values>
+          <value value="DEPOSITO ZANEPAN(04319228000280)"/>
+        </values>
+      </field>
+    </filter>
+  </filters>
+  <charts version="2" timestamp="23/05/2014 09:50:38">
+    <chart timestamp="23/05/2014 09:50:38">
+      <chart_properties SeriesType="TBarSeries" StackType="mbSide" TypeChartData="tcd_ByAxisMeasures" CategoriesAxis="ar_RowAxis" SeriesAxis="ar_ColAxis" CategoriesFieldCount="1" SeriesFieldCount="1" MeasureFieldIndex="0" LogType="ltSimple" MarksShowStyle="ssNone" SkipNullPoints="0" AllSeriesMarksStyle="smsLabelValue" Legend_Visible="-1" View3D="-1"/>
+      <View3DProperties Chart3DPercent="15" Elevation="345" Orthogonal="-1" HorizOffset="0" VertOffset="0" Perspective="15" Rotation="345" Tilt="0" Zoom="100"/>
+    </chart>
+  </charts>
+</slice>
+[EFD CONTRIBUICOES - REGIME NAO CUMULATIVO_FIM]
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+

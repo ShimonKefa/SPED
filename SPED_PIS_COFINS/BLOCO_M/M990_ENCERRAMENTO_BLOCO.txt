@@ -1,0 +1,9 @@
+[TXT]
+RegPai = BLOCO_M
+Reg = M990
+Display = M990 - ENCERRAMENTO BLOCO M
+SubPasta = sim
+Caminho = SPED\BLOCO_M\
+
+[SQL]
+1 = SELECT 'M990' REG, :BLOCO_M + 1 QTDE_LIN_0 FROM RDB$DATABASE

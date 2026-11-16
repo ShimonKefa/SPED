@@ -1,0 +1,9 @@
+[TXT]
+RegPai = BLOCO_A
+Reg = A990
+Display = A990 - ENCERRAMENTO BLOCO A
+SubPasta = sim
+Caminho = Caminho = SPED\SPED_PIS_COFINS\BLOCO_A\
+
+[SQL]
+1 = SELECT 'A990' REG, :BLOCO_A + 1 QTDE_LIN_0 FROM RDB$DATABASE
